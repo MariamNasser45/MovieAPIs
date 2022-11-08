@@ -9,5 +9,7 @@ namespace MovieAPIs.Models
         }
 
         public DbSet<Genre>? Genres { get; set; }
+
+        public DbSet<Movie> Movies { get; set; }
     }
 }
