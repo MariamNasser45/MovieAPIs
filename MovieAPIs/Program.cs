@@ -1,8 +1,20 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using MovieAPIs.Models;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+//calling type of connection directly without define it in variabl as we made in crud.net project
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+
 builder.Services.AddControllers();
 
 //to access Core from any network
@@ -21,7 +33,7 @@ builder.Services.AddSwaggerGen(options =>
         Description = "My first api",
         TermsOfService = new Uri("https://www.google.com"), // action of TermsOfService "put any action link we need"
         Contact = new OpenApiContact
-        { 
+        {
             //initialize information
             Name = "Mariam",
             Email = "SwaggerAPI@domain.com",
@@ -36,7 +48,7 @@ builder.Services.AddSwaggerGen(options =>
 
     // Security code : to make end user can add token authintecation while send request to APIs
     //1- defination authorize for all end points
-    options.AddSecurityDefinition(name:"Bearer", new OpenApiSecurityScheme
+    options.AddSecurityDefinition(name: "Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.ApiKey,
@@ -52,7 +64,7 @@ builder.Services.AddSwaggerGen(options =>
             new OpenApiSecurityScheme
             {
                 Reference = new OpenApiReference
-                {         
+                {
                     Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 },
@@ -79,7 +91,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 //important define it beffore authorization
-app.UseCors(c=>c.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()); // any header , method , origine can access it
+app.UseCors(c => c.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()); // any header , method , origine can access it
 
 app.UseAuthorization();
 
