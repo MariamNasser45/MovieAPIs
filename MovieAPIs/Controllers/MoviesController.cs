@@ -87,10 +87,10 @@ namespace MovieAPIs.Controllers
         // create get method which recieve GenreId and return only movies which have this genreid
 
         [HttpGet("GenreId")] // using id , GetByGenreId ..... etc to avoid error of httpget when define multiple method httpget
-        public async Task<IActionResult> GetByGenreId(byte genreid)
+        public async Task<IActionResult> GetByGenreId(byte genreId)
         {
             var movie = await _context.Movies.
-                Where(m => m.GenreId == genreid).
+                Where(m => m.GenreId == genreId).
                 OrderByDescending(r => r.Rate)
                 .Include(m => m.Genre)
                 .Select(m => new MovieDeatialsDto
@@ -126,8 +126,10 @@ namespace MovieAPIs.Controllers
             }
 
             var IsvallideGenreid = await _context.Genres.AnyAsync(g => g.Id == dto.GenreId);
+
             if (!IsvallideGenreid)
                 return BadRequest(" Not exist GenreID");
+
             using var datastream = new MemoryStream();
             await dto.Poster.CopyToAsync(datastream); // casting from file to array
 

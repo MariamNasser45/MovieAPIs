@@ -16,6 +16,7 @@ namespace MovieAPIs.DTOs
 
         //public byte[] Poster { get; set; }
         public byte GenreId { get; set; }
+
         //public string GenreName { get; set; }
 
 
