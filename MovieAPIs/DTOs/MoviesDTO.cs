@@ -11,11 +11,13 @@ namespace MovieAPIs.DTOs
         [MaxLength(25000)]
         public string Description { get; set; }
 
-        public IFormFile Poster { get; set; } // if using this data type instead of byte will be error in creat action
+        public IFormFile? Poster { get; set; } // if using this data type instead of byte will be error in creat action
                                               // because this type is file and cannot store file in array
 
         //public byte[] Poster { get; set; }
         public byte GenreId { get; set; }
+        //public string GenreName { get; set; }
+
 
     }
 }
