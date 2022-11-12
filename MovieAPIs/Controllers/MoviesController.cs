@@ -1,4 +1,4 @@
-﻿///using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using MovieAPIs.DTOs;
@@ -14,7 +14,7 @@ namespace MovieAPIs.Controllers
     {
         //private readonly ApplicationDbContext _context;
 
-        //private readonly IMapper _autoMap
+        private readonly IMapper _autoMap;
 
         // determine types and size of files which user entered it befor apply request
 
@@ -26,9 +26,11 @@ namespace MovieAPIs.Controllers
     
         private readonly IGenresService _genreservices; //replace context ctor 
 
-        public MoviesController(IMovieService MoviesService)
+        public MoviesController(IMovieService MoviesService , IGenresService genreservices , IMapper autoMap)
         {
             _MoviesService = MoviesService;
+            _genreservices = genreservices;
+            _autoMap = autoMap;
         }
 
         [HttpGet]  // not define name of it becaus it is only get method in this class
@@ -65,9 +67,9 @@ namespace MovieAPIs.Controllers
 
             var movie = await _MoviesService.GetAllMovie(); 
 
-            //TODO : Map movies to DTO
-
-            return Ok(movie);
+            //using auto mapper
+            var data=_autoMap.Map<IEnumerable<MovieDeatialsDto>>(movie); //<IEnumerable<MovieDeatialsDto>> : set how the data will appear , (movie) : source which define value to map them
+            return Ok(data);
 
         }
 
@@ -97,34 +99,46 @@ namespace MovieAPIs.Controllers
             //AFTER USING SERVICES 
 
             var movie = await _MoviesService.GetById(id);
-            return Ok(movie);
+
+            var data = _autoMap.Map<MovieDeatialsDto>(movie); //<MovieDeatialsDto > using instead ienumrable becaus need return only one movie 
+            return Ok(data);
         }
 
 
         // create get method which recieve GenreId and return only movies which have this genreid
 
         [HttpGet("GenreId")] // using id , GetByGenreId ..... etc to avoid error of httpget when define multiple method httpget
-        //public async Task<IActionResult> GetByGenreId(byte genreId)
-        //{
-        //    var movie = await _context.Movies.
-        //        Where(m => m.GenreId == genreId).
-        //        OrderByDescending(r => r.Rate)
-        //        .Include(m => m.Genre)
-        //        .Select(m => new MovieDeatialsDto
-        //        {
-        //            Id = m.Id,
-        //            Title = m.Title,
-        //            Year = m.Year,
-        //            Description = m.Description,
-        //            Rate = m.Rate,
-        //            GenreId = m.GenreId,
-        //            GenreName = m.Genre.Name,
-        //            Poster = m.Poster
+        public async Task<IActionResult> GetByGenreId(byte genreId)
+        {
+            // since this method is identical to GetAll method with "Where" only differ so
+            // improve code by using IMovieServices instead of  write code multiple times
 
-        //        }).ToListAsync();  //using Include(m => m.Genre): to avoid returne genre=null so using Include(m => m.Genre) to return genre data 
-        //    return Ok(movie);
+            //var movie = await _context.Movies.
+            //    Where(m => m.GenreId == genreId).
+            //    OrderByDescending(r => r.Rate)
+            //    .Include(m => m.Genre)
+            //    .Select(m => new MovieDeatialsDto
+            //    {
+            //        Id = m.Id,
+            //        Title = m.Title,
+            //        Year = m.Year,
+            //        Description = m.Description,
+            //        Rate = m.Rate,
+            //        GenreId = m.GenreId,
+            //        GenreName = m.Genre.Name,
+            //        Poster = m.Poster
 
-        //}
+            //    }).ToListAsync();  //using Include(m => m.Genre): to avoid returne genre=null so using Include(m => m.Genre) to return genre data 
+            //return Ok(movie);
+
+            ////////////////////////////////////////////////////////////////////////////////////
+            //AFTER USING SERVICES 
+
+            var movie = await _MoviesService.GetAllMovie(genreId);
+            return Ok(movie);
+
+
+        }
 
 
 
@@ -133,7 +147,47 @@ namespace MovieAPIs.Controllers
         // in movies also using DTO to recieve data from user and put them in DB instead of define then in this method
         public async Task<IActionResult> AddMovieAsync([FromForm] MoviesDTO dto) // using from form to define the poster is form not string as appear in swagger when not use from form 
         {
-            //// cheack extention , size of file
+            ////// cheack extention , size of file
+            //if (!_allowedextentions.Contains(Path.GetExtension(dto.Poster.FileName))) // if exe not exist in exe defined then apply next code
+            //{
+            //    return BadRequest("This Exe Not allowed please enter file with onlt .jpg , .png");
+
+            //    if (dto.Poster.Length > _Maxsize)
+            //        return BadRequest("Please enter file not exceed 3 MG");
+            //}
+
+            //var IsvallideGenreid = await _genreservices.IsvallideGenreid(dto.GenreId);
+
+            //if (!IsvallideGenreid)
+            //    return BadRequest(" Not exist GenreID");
+
+            //using var datastream = new MemoryStream();
+            //await dto.Poster.CopyToAsync(datastream); // casting from file to array
+
+            //var movie = new Movie
+            //{
+            //    GenreId = dto.GenreId,
+            //    Title = dto.Title,
+            //    //Poster = dto.Poster,
+            //    //line 17 in DTO
+            //    Poster = datastream.ToArray(),
+            //    Rate = dto.Rate,
+            //    Description = dto.Description,
+            //    Year = dto.Year,
+
+            //};
+
+            ////_context.AddAsync(movie);
+            ////_context.SaveChangesAsync();
+            //return Ok(movie);
+
+            //////////////////////////////////////////////////////////////////////////////////////
+            ////AFTER USING SERVICES
+
+            /// cheack extention , size of file
+            if (dto.Poster == null)
+                return BadRequest("Poster Field is Required");
+
             if (!_allowedextentions.Contains(Path.GetExtension(dto.Poster.FileName))) // if exe not exist in exe defined then apply next code
             {
                 return BadRequest("This Exe Not allowed please enter file with onlt .jpg , .png");
@@ -152,14 +206,16 @@ namespace MovieAPIs.Controllers
 
             var movie = new Movie
             {
-                GenreId = dto.GenreId,
                 Title = dto.Title,
+                Year = dto.Year,
+                Rate = dto.Rate,
+                Description = dto.Description,
                 //Poster = dto.Poster,
                 //line 17 in DTO
                 Poster = datastream.ToArray(),
-                Rate = dto.Rate,
-                Description = dto.Description,
-                Year = dto.Year,
+                GenreId = dto.GenreId,
+
+
 
             };
 
@@ -175,6 +231,7 @@ namespace MovieAPIs.Controllers
             //AFTER USING SERVICES 
 
             _MoviesService.Add(movie);
+
             return Ok(movie);
         }
 
@@ -202,7 +259,7 @@ namespace MovieAPIs.Controllers
                     return BadRequest(" Not exist GenreID");
             }
 
-               if(dto.Poster != null) // in case user need to update poster then check enter poster condition 
+            if (dto.Poster != null) // in case user need to update poster then check enter poster condition 
             {
                 // cheack extention , size of file
                 if (!_allowedextentions.Contains(Path.GetExtension(dto.Poster.FileName))) // if exe not exist in exe defined then apply next code
@@ -220,7 +277,7 @@ namespace MovieAPIs.Controllers
 
             // Define Properties which user can change them
 
-            //movieid.Title = dto.Title;
+            movieid.Title = dto.Title;
             movieid.Year = dto.Year;
             movieid.GenreId = dto.GenreId;
             movieid.Rate = dto.Rate;

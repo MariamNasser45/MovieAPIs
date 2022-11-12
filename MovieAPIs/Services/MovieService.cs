@@ -24,10 +24,15 @@ namespace MovieAPIs.Services
             return movie;
         }
 
-        public async Task<IEnumerable<Movie>> GetAllMovie()
+        public async Task<IEnumerable<Movie>> GetAllMovie(byte genreId=0)
         {
-            return await _context.Movies.Include(m => m.Genre).ToListAsync();
+            return await _context.Movies
+                .Where(m => m.GenreId == genreId || genreId==0) // if user sent exist genere id in db then return all movies of its id
+                .Include(m => m.Genre).ToListAsync();          // OR if id still 0 "default value" not return anything
+
         }
+
+     
 
         public async Task<Movie> GetById(byte id)
         {
