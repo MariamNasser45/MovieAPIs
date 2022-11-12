@@ -9,3 +9,4 @@ global using Microsoft.AspNetCore.Mvc;
 global using MovieAPIs.Models;
 global using RouteAttribute = Microsoft.AspNetCore.Mvc.RouteAttribute;
 global using MovieAPIs.DTOs;
+global using MovieAPIs.Services;

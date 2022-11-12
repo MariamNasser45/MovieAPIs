@@ -1,9 +1,10 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using MovieAPIs.Models;
-using System;
+using MovieAPIs.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +22,14 @@ builder.Services.AddControllers();
 //to access Core from any network
 builder.Services.AddCors();
 
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
+//Services registration 
+builder.Services.AddTransient<IGenresService, GenresService>();
+builder.Services.AddTransient<IMovieService, MovieService>();
+
 
 //defination of swagger to the app can use it .. using options to change from default to need options
 builder.Services.AddSwaggerGen(options =>
